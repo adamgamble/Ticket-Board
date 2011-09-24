@@ -1,0 +1,120 @@
+%h1= @project.name
+%hr
+%div{:id => "fridge", :class => "bucket"}
+  %span Fridge
+  %hr
+  %ul{:id => "fridge_ul"}
+    -@project.tickets.for_state("fridge").each do |ticket|
+      %li{:id => ticket.id, :class => "fridge_li"}=ticket.title
+%div{:id => "development", :class => "bucket"}
+  %span Development
+  %hr
+  %ul{:id => "development_ul"}
+    -@project.tickets.for_state("development").each do |ticket|
+      %li{:id => ticket.id, :class => "development_li"}=ticket.title
+%div{:id => "peer_review", :class => "bucket"}
+  %span Peer Review
+  %hr
+  %ul{:id => "peer_review_ul"}
+    -@project.tickets.for_state("peer_review").each do |ticket|
+      %li{:id => ticket.id, :class => "peer_review_li"}=ticket.title
+%div{:id => "user_acceptance", :class => "bucket"}
+  %span User Acceptance
+  %hr
+  %ul{:id => "user_acceptance_ul"}
+    -@project.tickets.for_state("user_acceptance").each do |ticket|
+      %li{:id => ticket.id, :class => "user_acceptance_li"}=ticket.title
+%div{:id => "archive", :class => "bucket"}
+  %span Archive
+  %hr
+  %ul{:id => "archive_ul"}
+    -@project.tickets.for_state("archive").each do |ticket|
+      %li{:id => ticket.id, :class => "archive_li"}=ticket.title
+
+:javascript
+  $(document).ready(ready_function());
+
+  function ready_function() {
+    $('li').each(function(){
+      makeItemDraggable($(this));
+    });
+    $('#fridge_ul').droppable({
+      accept: ".development_li",
+      drop: function(event, ui){
+        var new_element = $("<li></li>").text(ui.draggable.text()).attr("id",ui.draggable.attr("id")).appendTo(this);
+        new_element.addClass("fridge_li")
+        makeItemDraggable(new_element);
+        var id = ui.draggable.attr("id")
+        reverseState(id);
+        ui.draggable.remove();
+      }
+    })
+    $('#development_ul').droppable({
+      accept: ".fridge_li, .peer_review_li, .user_acceptance_li",
+      drop: function(event, ui){
+        var new_element = $("<li></li>").text(ui.draggable.text()).attr("id",ui.draggable.attr("id")).appendTo(this);
+        new_element.addClass("development_li")
+        makeItemDraggable(new_element);
+        var id = ui.draggable.attr("id")
+        if (ui.draggable.hasClass("fridge_li")) {
+          advanceState(id);
+        } else {
+          reverseState(id); 
+        }
+        ui.draggable.remove();
+      }
+    })
+    $('#peer_review_ul').droppable({
+      accept: ".development_li",
+      drop: function(event, ui){
+        var new_element = $("<li></li>").text(ui.draggable.text()).attr("id",ui.draggable.attr("id")).appendTo(this);
+        new_element.addClass("peer_review_li")
+        makeItemDraggable(new_element);
+        var id = ui.draggable.attr("id")
+        advanceState(id);
+        ui.draggable.remove();
+      }
+    })
+    $('#user_acceptance_ul').droppable({
+      accept: ".peer_review_li",
+      drop: function(event, ui){
+        var new_element = $("<li></li>").text(ui.draggable.text()).attr("id",ui.draggable.attr("id")).appendTo(this);
+        new_element.addClass("user_acceptance_li")
+        makeItemDraggable(new_element);
+        var id = ui.draggable.attr("id")
+        advanceState(id);
+        ui.draggable.remove();
+      }
+    })
+    $('#archive_ul').droppable({
+      accept: ".user_acceptance_li",
+      drop: function(event, ui){
+        var new_element = $("<li></li>").text(ui.draggable.text()).attr("id",ui.draggable.attr("id")).appendTo(this);
+        new_element.addClass("archive_li")
+        makeItemDraggable(new_element);
+        var id = ui.draggable.attr("id")
+        advanceState(id);
+        ui.draggable.remove();
+      }
+    })
+  }
+
+  function reverseState(id) {
+    $.post("/tickets/" + id + "/reverse_state");
+  }
+
+  function advanceState(id) {
+    $.post("/tickets/" + id + "/advance_state");
+  }
+
+  function makeItemDraggable(element) {
+    element.draggable({
+      revert: true
+    })
+  }
+  function showDetailView(element) {
+    element.animate({
+      width: "800px",
+      height: "600px",
+    })
+  }
