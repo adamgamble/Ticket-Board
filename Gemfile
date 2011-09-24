@@ -4,6 +4,7 @@ gem 'rails', '3.1.0'
 gem 'pg', '0.11.0'
 gem 'state_machine', '1.0.2'
 gem 'haml-rails'
+gem 'therubyracer-heroku'
 
 
 # Gems used only for assets and not required
